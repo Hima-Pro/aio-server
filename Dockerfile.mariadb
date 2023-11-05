@@ -1,0 +1,34 @@
+FROM alpine:3.18
+
+ARG BUILD_DATE
+ARG VCS_REF
+
+LABEL maintainer="Ibrahim Megahed <tdim.dev@gmail.com>" \
+    architecture="amd64/x86_64" \
+    alpine-version="3.18" \
+    mariadb-version="10.11.5" \
+    build="6-Nov-2023" \
+    org.opencontainers.image.title="aio-server-mariadb" \
+    org.opencontainers.image.description="All In One server. MariaDB server on Alpine Linux docker image." \
+    org.opencontainers.image.authors="Ibrahim Megahed <tdim.dev@gmail.com>" \
+    org.opencontainers.image.vendor="Hima-Pro" \
+    org.opencontainers.image.version="v1.0.0" \
+    org.opencontainers.image.url="https://hub.docker.com/r/tdim/aio-server/" \
+    org.opencontainers.image.source="https://github.com/Hima-Pro/aio-server" \
+    org.opencontainers.image.revision=$VCS_REF \
+    org.opencontainers.image.created=$BUILD_DATE
+
+COPY ./src /var/www/src
+WORKDIR /var/www
+
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache mariadb supervisor pwgen bash && \
+    rm -f /var/cache/apk/*
+
+RUN bash -c "mkdir -p /var/www/{aio-logs,src/setup/{initdb,pre-{init,exec}}.d}" && \
+    chmod 755 ./src/setup/*.sh
+
+EXPOSE 3306
+
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/var/www/src/configs/supervisord-mariadb.conf"]

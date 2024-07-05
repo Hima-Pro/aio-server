@@ -21,7 +21,6 @@ usage() {
     echo "Usage: build.sh [OPTIONS] <image_type>"
     echo ""
     echo "Options:"
-    echo "  -m, --message <message>  Set the build message (optional)"
     echo "  -h, --help               Print this message"
     echo "  -v, --version            Print version"
     echo ""
@@ -34,22 +33,17 @@ usage() {
 }
 
 # Default message if not provided
-MESSAGE="developer does not provide and changes"
+MESSAGE="developer did not provide any changes"
 
 # Parse command line options
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        -m|--message)
-            MESSAGE="$2"
-            shift 2 # Shift past the option and its argument
-            ;;
         -h|--help)
             banner
             usage
             ;;
         -v|--version)
-            banner
             echo "build.sh version 1.0.0"
             exit 0
             ;;
@@ -66,20 +60,23 @@ if [ $# -eq 0 ]; then
 fi
 
 # Check for the image type
-if [ "$1" == "latest" ]; then
-    banner
-    docker build --build-arg BUILD_DATE="$(date)" --build-arg VCS_REF="$MESSAGE" \
-        -t tdim/aio-server:latest -f ./Dockerfile .
-elif [ "$1" == "mariadb" ]; then
-    banner
-    docker build --build-arg BUILD_DATE="$(date)" --build-arg VCS_REF="$MESSAGE" \
-        -t tdim/aio-server:mariadb -f ./Dockerfile.mariadb .
-elif [ "$1" == "web" ]; then
-    banner
-    docker build --build-arg BUILD_DATE="$(date)" --build-arg VCS_REF="$MESSAGE" \
-        -t tdim/aio-server:web -f ./Dockerfile.web .
-else
-    banner
-    # Invalid image type
-    usage "Invalid option or image type: $1"
-fi
+case "$1" in
+    latest)
+        banner
+        docker buildx build -t tdim/aio-server:latest -f ./Dockerfile .
+        ;;
+    mariadb)
+        banner
+        docker buildx build -t tdim/aio-server:mariadb -f ./Dockerfile.mariadb .
+        ;;
+    web)
+        banner
+        docker buildx build -t tdim/aio-server:web -f ./Dockerfile.web .
+        ;;
+    *)
+        banner
+        # Invalid image type
+        usage "Invalid option or image type: $1"
+        exit 1
+        ;;
+esac

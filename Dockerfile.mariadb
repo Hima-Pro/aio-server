@@ -1,34 +1,29 @@
-FROM alpine:3.18
+FROM alpine:3.20
 
-ARG BUILD_DATE
-ARG VCS_REF
-
+# Image info
 LABEL maintainer="Ibrahim Megahed <tdim.dev@gmail.com>" \
-    architecture="amd64/x86_64" \
-    alpine-version="3.18" \
-    mariadb-version="10.11.5" \
-    build="6-Nov-2023" \
-    org.opencontainers.image.title="aio-server-mariadb" \
-    org.opencontainers.image.description="All In One server. MariaDB server on Alpine Linux docker image." \
+    org.opencontainers.image.title="aio-server mariadb" \
+    org.opencontainers.image.description="All In One server. apache2, php, phpmyadmin and mariadb in one Alpine Linux docker image." \
     org.opencontainers.image.authors="Ibrahim Megahed <tdim.dev@gmail.com>" \
-    org.opencontainers.image.vendor="Hima-Pro" \
-    org.opencontainers.image.version="v1.0.0" \
-    org.opencontainers.image.url="https://hub.docker.com/r/tdim/aio-server/" \
-    org.opencontainers.image.source="https://github.com/Hima-Pro/aio-server" \
-    org.opencontainers.image.revision=$VCS_REF \
-    org.opencontainers.image.created=$BUILD_DATE
+    org.opencontainers.image.version="2.0.0" \
+    architecture="amd64/x86_64" \
+    build="6-Jul-2024"
 
-COPY ./src /var/www/src
-WORKDIR /var/www
+# First setup
+COPY . /app/source
+WORKDIR /app
 
-RUN apk update && \
-    apk upgrade && \
-    apk add --no-cache mariadb supervisor pwgen bash && \
-    rm -f /var/cache/apk/*
+# Download packages, Install Later - just to keep image size small
+RUN mkdir pkgs && \
+    apk add --no-cache aom-libs && \
+    # Main pkgs
+    apk fetch --no-cache -R -o ./pkgs mariadb pwgen supervisor
 
-RUN bash -c "mkdir -p /var/www/{aio-logs,src/setup/{initdb,pre-{init,exec}}.d}" && \
-    chmod 755 ./src/setup/*.sh
+# Final setup - restructure app directory
+RUN mkdir /app/logs /app/pids && \
+    cp -r /app/source/src/configs /app/source/src/scripts /app && \
+    chmod -R 777 /app/scripts
 
 EXPOSE 3306
 
-ENTRYPOINT ["/usr/bin/supervisord", "-c", "/var/www/src/configs/supervisord-mariadb.conf"]
+ENTRYPOINT ["/app/scripts/entrypoint.sh", "mariadb"]

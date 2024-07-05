@@ -1,51 +1,33 @@
-FROM alpine:3.18
+FROM alpine:3.20
 
-ARG BUILD_DATE
-ARG VCS_REF
-
+# Image info
 LABEL maintainer="Ibrahim Megahed <tdim.dev@gmail.com>" \
-    architecture="amd64/x86_64" \
-    alpine-version="3.18.3" \
-    apache2-version="2.4.57" \
-    php-version="8.1.23" \
-    phpmyadmin-version="5.2.1" \
-    mariadb-version="10.11.5" \
-    build="6-Nov-2023" \
-    org.opencontainers.image.title="aio-server" \
-    org.opencontainers.image.description="All In One server. Apache2+PHP, PHPMyAdmin and MariaDB server on one Alpine Linux docker image." \
+    org.opencontainers.image.title="aio-server all" \
+    org.opencontainers.image.description="All In One server. apache2, php, phpmyadmin and mariadb in one Alpine Linux docker image." \
     org.opencontainers.image.authors="Ibrahim Megahed <tdim.dev@gmail.com>" \
-    org.opencontainers.image.vendor="Hima-Pro" \
-    org.opencontainers.image.version="v1.0.0" \
-    org.opencontainers.image.url="https://hub.docker.com/r/tdim/aio-server/" \
-    org.opencontainers.image.source="https://github.com/Hima-Pro/aio-server" \
-    org.opencontainers.image.revision=$VCS_REF \
-    org.opencontainers.image.created=$BUILD_DATE
+    org.opencontainers.image.version="2.0.0" \
+    architecture="amd64/x86_64" \
+    build="6-Jul-2024"
 
-COPY ./src /var/www/src
-COPY ./htdocs /var/www/htdocs
-WORKDIR /var/www
+# First setup
+COPY . /app/source
+WORKDIR /app
 
-RUN apk update && \
-    apk upgrade && \
-    apk add --no-cache \
-    apache2 mariadb php phpmyadmin \
-    # mariadb-client mariadb-server-utils \
+# Download packages, Install Later - just to keep image size small
+RUN mkdir pkgs && \
+    apk add --no-cache aom-libs && \
+    apk fetch --no-cache -R -o ./pkgs \
+    # Main pkgs
+    apache2 mariadb php83 phpmyadmin composer pwgen supervisor \
+    # PHP extensions
     php-apache2 php-curl php-gd php-zip php-mbstring php-mysqli php-pdo_mysql php-sodium \
-    php-ctype php-session php-xml php-json php-iconv php-sqlite3 php-pdo_sqlite \
-    supervisor composer pwgen bash && \
-    rm -f /var/cache/apk/*
+    php-ctype php-session php-xml php-json php-iconv php-sqlite3 php-pdo_sqlite
 
-RUN cp ./src/configs/php.ini /etc/php81/conf.d/custom.ini && \
-    sed -i 's#/var/www/localhost/htdocs#/var/www/htdocs#g' /etc/apache2/httpd.conf && \
-    sed -i 's#/var/www/localhost/cgi-bin#/var/www/cgi-bin#g' /etc/apache2/httpd.conf && \
-    sed -i '/LoadModule rewrite_module/s/^#//g' /etc/apache2/httpd.conf && \
-    sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/httpd.conf && \
-    bash -c "mkdir -p /var/www/{aio-logs,src/setup/{initdb,pre-{init,exec}}.d}" && \
-    chown -R apache:apache ./htdocs && \
-    cp -r localhost/cgi-bin . && \
-    rm -rf localhost && \
-    chmod 755 ./src/setup/*.sh
+# Final setup - restructure app directory
+RUN mkdir /app/logs /app/pids && \
+    cp -r /app/source/src/configs /app/source/src/scripts /app && \
+    chmod -R 777 /app/scripts
 
 EXPOSE 80 8080 3306
 
-ENTRYPOINT ["/usr/bin/supervisord", "-c", "/var/www/src/configs/supervisord.conf"]
+ENTRYPOINT ["/app/scripts/entrypoint.sh", "all"]

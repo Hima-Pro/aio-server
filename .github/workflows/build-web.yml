@@ -36,5 +36,5 @@ jobs:
           tags: |
             tdim/aio-server:web
             tdim/aio-server:web-2.0.0
-            ghcr.io/Hima-Pro/aio-server:web
-            ghcr.io/Hima-Pro/aio-server:web-2.0.0
+            ghcr.io/hima-pro/aio-server:web
+            ghcr.io/hima-pro/aio-server:web-2.0.0

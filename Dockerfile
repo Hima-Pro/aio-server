@@ -5,7 +5,7 @@ LABEL maintainer="Ibrahim Megahed <tdim.dev@gmail.com>" \
     org.opencontainers.image.title="aio-server all" \
     org.opencontainers.image.description="All In One server. apache2, php, phpmyadmin and mariadb in one Alpine Linux docker image." \
     org.opencontainers.image.authors="Ibrahim Megahed <tdim.dev@gmail.com>" \
-    org.opencontainers.image.version="2.0.0" \
+    org.opencontainers.image.version="2.3.0" \
     architecture="amd64/x86_64" \
     build="6-Jul-2024"
 

@@ -5,6 +5,11 @@ if [ -d /app/pkgs ]; then
     rm -rf /app/pkgs
 fi
 
+looper() {
+    sleep 1000
+    looper
+}
+
 configure() {
     if [ -f /app/scripts/configure.sh ]; then
         sh /app/scripts/configure.sh $@
@@ -16,17 +21,22 @@ case "$1" in
         configure web
         configure mariadb
         rm -f /app/scripts/configure.sh
-        /usr/bin/supervisord -c /app/configs/supervisord.conf
+        rc-service apache2.sh restart
+        rc-service mariadb.sh restart
+        rc-service phpmyadmin.sh restart
+        looper
         ;;
     mariadb)
         configure mariadb
         rm -f /app/scripts/configure.sh
-        /usr/bin/supervisord -c /app/configs/supervisord-mariadb.conf
+        rc-service mariadb.sh restart
+        looper
         ;;
     web)
         configure web
         rm -f /app/scripts/configure.sh
-        /usr/bin/supervisord -c /app/configs/supervisord-web.conf
+        rc-service apache2.sh restart
+        looper
         ;;
     *)
         echo "Usage: $0 {all|mariadb|web}"

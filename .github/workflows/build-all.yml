@@ -27,4 +27,4 @@ jobs:
           push: true
           tags: |
             tdim/aio-server:latest
-            tdim/aio-server:2.0.0
+            tdim/aio-server:2.3.0

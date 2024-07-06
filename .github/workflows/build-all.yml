@@ -28,5 +28,3 @@ jobs:
           tags: |
             tdim/aio-server:latest
             tdim/aio-server:2.0.0
-            ghcr.io/hima-pro/aio-server:latest
-            ghcr.io/hima-pro/aio-server:2.0.0

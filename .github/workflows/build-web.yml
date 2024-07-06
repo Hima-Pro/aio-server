@@ -1,7 +1,7 @@
 name: build aio-web
 
 on:
-  push:
+  workflow_dispatch:
 
 jobs:
   docker:

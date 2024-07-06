@@ -1,7 +1,7 @@
 name: build aio-mariadb
 
 on:
-  push:
+  workflow_dispatch:
 
 jobs:
   docker:
